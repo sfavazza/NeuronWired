@@ -1,0 +1,39 @@
+services:
+  defy-dev:
+    hostname: defy-dev.debug
+    image: neuronwired:v17
+    depends_on:
+      setup-volumes:
+        condition: service_completed_successfully
+    # restart: unless-stopped
+    # entrypoint: bash -c 'clangd --query-driver=/usr/bin/arm-linux-gnueabihf-gcc'
+    tty: true
+    stdin_open: true
+    volumes:
+      # this mapping will give access to your keyboard via the docker container. To find the device name the
+      # kernel associated to your device check the kernel messages via:
+      #
+      # sudo dmesg | grep -i -A5 'manufacturer: dygma'
+      #
+      # normally it is something like /dev/ttyACM0
+    - /dev/ttyACM0:/dev/target
+    - .:/code
+    # Preserve the artifacts of PlatformIO across container invocations. To start from scratch delete the
+    # volumes with: "docker volumes rm pio-*"
+    - pio-cache:/home/deveng/.platformio/.cache
+    - pio-packages:/home/deveng/.platformio/packages
+    - pio-platforms:/home/deveng/.platformio/platforms
+
+  setup-volumes:
+    image: neuronwired:v16
+    user: root
+    entrypoint: bash -c 'chown -R deveng:deveng /home/deveng/.platformio'
+    volumes:
+    - pio-cache:/home/deveng/.platformio/.cache
+    - pio-packages:/home/deveng/.platformio/packages
+    - pio-platforms:/home/deveng/.platformio/platforms
+
+volumes:
+  pio-cache:
+  pio-packages:
+  pio-platforms:
